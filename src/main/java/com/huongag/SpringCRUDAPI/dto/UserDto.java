@@ -1,33 +1,21 @@
-//package com.huongag.SpringCRUDAPI.model;
+//package com.huongag.SpringCRUDAPI.dto;
 //
-//import jakarta.persistence.*;
-//
-//@Entity(name = "users")
-//@Table(name = "users")
-//public class Users {
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    private int id;
-//
+//public class UserDto {
 //    private String name;
-//
 //    private String email;
-//
-//    private String password;
-//
+//    private  String password;
 //    private int age;
-//
 //    private String address;
 //
-//    public Users() {
+//    public UserDto() {
 //    }
 //
-//    public int getId() {
-//        return id;
-//    }
-//
-//    public void setId(int id) {
-//        this.id = id;
+//    public UserDto(String name, String email, String password, int age, String address) {
+//        this.name = name;
+//        this.email = email;
+//        this.password = password;
+//        this.age = age;
+//        this.address = address;
 //    }
 //
 //    public String getName() {
@@ -67,15 +55,6 @@
 //    }
 //
 //    public void setAddress(String address) {
-//        this.address = address;
-//    }
-//
-//    public Users(int id, String name, String email, String password, int age, String address) {
-//        this.id = id;
-//        this.name = name;
-//        this.email = email;
-//        this.password = password;
-//        this.age = age;
 //        this.address = address;
 //    }
 //}

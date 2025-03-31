@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: SpringCRUDAPI
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    ddl-auto: update
+    show-sql: true
+
+  datasource:
+    url: jdbc:mysql://localhost:3307/huongag
+    username: huongag
+    password: abcd1234
