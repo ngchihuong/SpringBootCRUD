@@ -1,7 +1,7 @@
 package com.huongag.SpringCRUDAPI.service.impl;
 
+import com.huongag.SpringCRUDAPI.config.BcryptPassword;
 import com.huongag.SpringCRUDAPI.dto.AccountDto;
-import com.huongag.SpringCRUDAPI.dto.ApiPaginateResponse;
 import com.huongag.SpringCRUDAPI.dto.ApiResponseDto;
 import com.huongag.SpringCRUDAPI.entity.AccountEntity;
 import com.huongag.SpringCRUDAPI.repo.AccountRepository;
@@ -9,18 +9,19 @@ import com.huongag.SpringCRUDAPI.service.AccountService;
 import com.huongag.SpringCRUDAPI.utils.Meta;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class AccountServiceImpl implements AccountService {
     @Autowired
     private AccountRepository repo;
 
-    private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
+    @Autowired
+    private BcryptPassword encoder;
 
     public AccountServiceImpl(AccountRepository repo) {
         this.repo = repo;
@@ -30,7 +31,7 @@ public class AccountServiceImpl implements AccountService {
     public ApiResponseDto<AccountDto> createAccount(AccountEntity account) {
         if (repo.existsByEmail(account.getEmail())) {
             return new ApiResponseDto<>(
-                    400,
+                    HttpStatus.BAD_REQUEST.value(),
                     "Email is exists!",
                     null
             );
@@ -46,80 +47,103 @@ public class AccountServiceImpl implements AccountService {
         AccountEntity savedAccount = repo.save(newAccount);
         AccountDto accountDto = convertToDto(savedAccount);
         return new ApiResponseDto<>(
-                201,
+                HttpStatus.CREATED.value(),
                 "Successful!",
                 accountDto
         );
     }
 
     @Override
-    public ApiPaginateResponse<List<AccountDto>> getAllAccounts(int currentPage, int pageSize) {
+    public ApiResponseDto<List<AccountDto>> getAllAccounts(int currentPage, int pageSize) {
         int offset = (currentPage - 1) * pageSize;
 
         if (pageSize <= 0 || pageSize <= 0) {
-            ApiPaginateResponse<List<AccountDto>> res = new ApiPaginateResponse<>();
+            ApiResponseDto<List<AccountDto>> res = new ApiResponseDto<>();
             Meta meta = new Meta();
-            meta.setCurrentPage(0);
-            meta.setPageSize(0);
-            meta.setTotal(0);
-            meta.setTotalPages(0);
 
-            res.setMeta(meta);
-            res.setResult(List.of());
+            res.setStatusCode(HttpStatus.NOT_FOUND.value());
+            res.setMessage("Not Found");
+            res.setData(List.of());
 
             return res;
         }
 
         List<AccountEntity> accounts = repo.getAccountsWithPaginate(pageSize, offset);
-        int total = repo.getTotalCount();
+        Long total = repo.getTotalCount();
         int totalPages = (int) Math.ceil((double) total / pageSize);
 
-        ApiPaginateResponse<List<AccountDto>> res = new ApiPaginateResponse<>();
+        ApiResponseDto<List<AccountDto>> res = new ApiResponseDto<>();
         Meta meta = new Meta();
 
         meta.setCurrentPage(currentPage);
         meta.setPageSize(pageSize);
         meta.setTotalPages(totalPages);
         meta.setTotal(total);
-
+        res.setStatusCode(HttpStatus.OK.value());
+        res.setMessage("Accounts");
         res.setMeta(meta);
-        res.setResult(accounts.stream().map(this::convertToDto).toList());
+        res.setData(accounts.stream().map(this::convertToDto).toList());
         return res;
     }
 
+
     @Override
-    public AccountEntity getAccountById(int id) {
-        return repo.findById(id).orElse(null);
+    public ApiResponseDto<AccountDto> getAccountById(int id) {
+        AccountEntity entity = repo.findById(id).orElse(null);
+        if (entity == null) {
+            return new ApiResponseDto<>(
+                    HttpStatus.NOT_FOUND.value(),
+                    "Not Found",
+                    null
+            );
+        }
+        AccountDto accountDto = convertToDto(entity);
+        return new ApiResponseDto<>(
+                HttpStatus.OK.value(),
+                "Account",
+                accountDto);
     }
 
     @Override
-    public void deleteAccount(int id) {
-        repo.deleteById(id);
+    public ApiResponseDto<AccountDto> deleteAccountById(int id) {
+        AccountEntity entity = repo.findById(id).orElse(null);
+        if (entity == null) {
+            return new ApiResponseDto<>(
+                    HttpStatus.NOT_FOUND.value(),
+                    "Not Found",
+                    null
+            );
+        } else {
+            repo.deleteById(id);
+            AccountDto accountDto = convertToDto(entity);
+            return new ApiResponseDto<>(
+                    HttpStatus.OK.value(),
+                    "Account",
+                    accountDto);
+        }
     }
 
+
     @Override
-    public ApiPaginateResponse<List<AccountDto>> searchAccounts(int currentPage, int pageSize, String keyword) {
+    public ApiResponseDto<List<AccountDto>> searchAccounts(int currentPage, int pageSize, String keyword) {
         int offset = (currentPage - 1) * pageSize;
         if (pageSize <= 0 || pageSize <= 0) {
-            ApiPaginateResponse<List<AccountDto>> res = new ApiPaginateResponse<>();
+            ApiResponseDto<List<AccountDto>> res = new ApiResponseDto<>();
             Meta meta = new Meta();
-            meta.setCurrentPage(0);
-            meta.setPageSize(0);
-            meta.setTotal(0);
-            meta.setTotalPages(0);
 
-            res.setMeta(meta);
-            res.setResult(List.of());
+            res.setStatusCode(HttpStatus.BAD_REQUEST.value());
+            res.setMessage("Bad Request!");
+            res.setData(List.of());
 
             return res;
         }
 
         List<AccountEntity> accounts = repo.searchProducts(pageSize, offset, keyword);
 //        int total = repo.getTotalCount();
-        int total = accounts.size();
+        Long total = accounts.stream().count();
         int totalPages = (int) Math.ceil((double) total / pageSize);
 
-        ApiPaginateResponse<List<AccountDto>> res = new ApiPaginateResponse<>();
+        ApiResponseDto<List<AccountDto>> res = new ApiResponseDto<>();
         Meta meta = new Meta();
 
         meta.setCurrentPage(currentPage);
@@ -128,17 +152,14 @@ public class AccountServiceImpl implements AccountService {
         meta.setTotal(total);
 
         res.setMeta(meta);
-        res.setResult(accounts.stream().map(this::convertToDto).toList());
+        res.setStatusCode(HttpStatus.OK.value());
+        res.setMessage("Accounts");
+        res.setData(accounts.stream().map(this::convertToDto).toList());
         return res;
     }
 
     @Override
     public ApiResponseDto<AccountDto> updatePatial(int id, AccountEntity account) {
-        AccountEntity acc = new AccountEntity();
-        acc.setName(account.getName());
-        acc.setAge(account.getAge());
-        acc.setAddress(account.getAddress());
-
         AccountEntity currentUser = repo.findById(id).orElse(null);
         if (currentUser == null) {
             return new ApiResponseDto<>(
@@ -148,15 +169,15 @@ public class AccountServiceImpl implements AccountService {
             );
         }
 
-        currentUser.setName(acc.getName());
-        currentUser.setAge(acc.getAge());
-        currentUser.setAddress(acc.getAddress());
+        currentUser.setName(account.getName());
+        currentUser.setAge(account.getAge());
+        currentUser.setAddress(account.getAddress());
 
         AccountEntity savedAccount = repo.save(currentUser);
         AccountDto newInforDto = convertToDto(savedAccount);
 
         return new ApiResponseDto<>(
-                200,
+                HttpStatus.OK.value(),
                 "Successful!",
                 newInforDto
         );
@@ -164,10 +185,6 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public ApiResponseDto<AccountDto> updateCreadential(int id, AccountEntity account) {
-        AccountEntity acc = new AccountEntity();
-        acc.setEmail(account.getEmail());
-        acc.setPassword(account.getPassword());
-
         AccountEntity currentUser = repo.findById(id).orElse(null);
         if (currentUser == null) {
             return new ApiResponseDto<>(
@@ -176,21 +193,28 @@ public class AccountServiceImpl implements AccountService {
                     null
             );
         }
+//        && repo.existsByEmail((account.getEmail())) != currentUser.getEmail().toString()
+        if (repo.existsByEmail(account.getEmail())) {
+            return new ApiResponseDto<>(
+                    HttpStatus.BAD_REQUEST.value(),
+                    "Email is exists!",
+                    null
+            );
+        }
 //        newAccount.setPassword(encoder.encode(account.getPassword()));
 
-        currentUser.setEmail(acc.getEmail());
+        currentUser.setEmail(account.getEmail());
         currentUser.setPassword(encoder.encode(account.getPassword()));
 
         AccountEntity savedAccount = repo.save(currentUser);
         AccountDto newInforDto = convertToDto(savedAccount);
 
         return new ApiResponseDto<>(
-                200,
+                HttpStatus.OK.value(),
                 "Successful!",
                 newInforDto
         );
     }
-
 
     private AccountDto convertToDto(AccountEntity entity) {
         return new AccountDto(

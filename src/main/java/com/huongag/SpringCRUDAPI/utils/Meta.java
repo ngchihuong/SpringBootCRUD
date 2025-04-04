@@ -1,50 +1,50 @@
 package com.huongag.SpringCRUDAPI.utils;
 
 public class Meta {
-    private int currentPage;
-    private int pageSize;
-    private int totalPages;
-    private int total;  //total data
+    private Integer currentPage;
+    private Integer pageSize;
+    private Integer totalPages;
+    private Long total;  //total data
 
     public Meta() {
     }
 
-    public Meta(int currentPage, int pageSize, int totalPages, int total) {
+    public Meta(Integer currentPage, Integer pageSize, Integer totalPages, Long total) {
         this.currentPage = currentPage;
         this.pageSize = pageSize;
         this.totalPages = totalPages;
         this.total = total;
     }
 
-    public int getCurrentPage() {
+    public Integer getCurrentPage() {
         return currentPage;
     }
 
-    public void setCurrentPage(int currentPage) {
+    public void setCurrentPage(Integer currentPage) {
         this.currentPage = currentPage;
     }
 
-    public int getPageSize() {
+    public Integer getPageSize() {
         return pageSize;
     }
 
-    public void setPageSize(int pageSize) {
+    public void setPageSize(Integer pageSize) {
         this.pageSize = pageSize;
     }
 
-    public int getTotalPages() {
+    public Integer getTotalPages() {
         return totalPages;
     }
 
-    public void setTotalPages(int totalPages) {
+    public void setTotalPages(Integer totalPages) {
         this.totalPages = totalPages;
     }
 
-    public int getTotal() {
+    public Long getTotal() {
         return total;
     }
 
-    public void setTotal(int total) {
+    public void setTotal(Long total) {
         this.total = total;
     }
 }

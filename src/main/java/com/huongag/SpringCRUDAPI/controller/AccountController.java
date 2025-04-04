@@ -1,13 +1,10 @@
 package com.huongag.SpringCRUDAPI.controller;
 
 import com.huongag.SpringCRUDAPI.dto.AccountDto;
-import com.huongag.SpringCRUDAPI.dto.ApiPaginateResponse;
 import com.huongag.SpringCRUDAPI.dto.ApiResponseDto;
 import com.huongag.SpringCRUDAPI.entity.AccountEntity;
 import com.huongag.SpringCRUDAPI.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,59 +26,25 @@ public class AccountController {
     }
 
     @GetMapping("/accounts")
-    public ApiPaginateResponse<List<AccountDto>> getAllAccount(
+    public ApiResponseDto<List<AccountDto>> getAllAccount(
             @RequestParam(defaultValue = "0") int currentPage,
             @RequestParam(defaultValue = "10") int pageSize
     ) {
         return accountService.getAllAccounts(currentPage, pageSize);
     }
 
-    @GetMapping("/account/{id}")
+    @GetMapping("/{id}")
     public ApiResponseDto<AccountDto> getAccountById(@PathVariable int id) {
-        AccountEntity entity = accountService.getAccountById(id);
-
-        AccountDto accountDto = new AccountDto(
-                entity.getId(),
-                entity.getName(),
-                entity.getEmail(),
-                entity.getAge(),
-                entity.getAddress()
-        );
-        if (accountDto != null) {
-            return new ApiResponseDto<>(
-                    200,
-                    "Account"
-                    ,
-                    accountDto);
-        } else {
-            return new ApiResponseDto<>(
-                    404,
-                    "Not Found",
-                    null
-            );
-        }
+        return accountService.getAccountById(id);
     }
 
-    @DeleteMapping("/account/{id}")
-    public ApiResponseDto<AccountDto> deleteAccount(@PathVariable int id) {
-        AccountEntity entity = accountService.getAccountById(id);
-        if (entity != null) {
-            accountService.deleteAccount(id);
-            AccountDto accountDto = new AccountDto(
-                    entity.getId(),
-                    entity.getName(),
-                    entity.getEmail(),
-                    entity.getAge(),
-                    entity.getAddress()
-            );
-            return new ApiResponseDto<>(HttpStatus.OK.value(), "Deleted!", accountDto);
-        } else {
-            return new ApiResponseDto<>(HttpStatus.NOT_FOUND.value(), "Failed to delete!", null);
-        }
+    @DeleteMapping("/{id}")
+    public ApiResponseDto<AccountDto> deleteAccountById(@PathVariable int id) {
+        return accountService.deleteAccountById(id);
     }
 
     @GetMapping("/search")
-    public ApiPaginateResponse<List<AccountDto>> searchProducts(
+    public ApiResponseDto<List<AccountDto>> searchProducts(
             @RequestParam(defaultValue = "0") int currentPage,
             @RequestParam(defaultValue = "10") int pageSize,
             String keyword) {
